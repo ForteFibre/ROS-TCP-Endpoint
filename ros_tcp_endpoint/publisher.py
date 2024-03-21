@@ -15,6 +15,7 @@
 import rclpy
 import re
 
+from rclpy.qos import QoSProfile, DurabilityPolicy
 from rclpy.serialization import deserialize_message
 
 from .communication import RosSender
@@ -36,9 +37,12 @@ class RosPublisher(RosSender):
         """
         strippedTopic = re.sub("[^A-Za-z0-9_]+", "", topic)
         node_name = f"{strippedTopic}_RosPublisher"
+        qos_profile = QoSProfile(depth=queue_size)
+        if latch:
+            qos_profile.durability = DurabilityPolicy.TRANSIENT_LOCAL
         RosSender.__init__(self, node_name)
         self.msg = message_class()
-        self.pub = self.create_publisher(message_class, topic, queue_size)
+        self.pub = self.create_publisher(message_class, topic, qos_profile)
 
     def send(self, data):
         """
